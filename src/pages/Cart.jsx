@@ -48,7 +48,7 @@ function Cart({ currentUser, setCurrentUser }) {
       }
       return item;
     });
-    await axios.patch(`https://floracart-backend.onrender.com/${currentUser.id}`, { cart: updatedCart });
+    await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
     fetchUserCart();
   };
 
