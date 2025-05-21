@@ -1,16 +1,10 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 function Navbar({ currentUser, setCurrentUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
-
-  const handleLogout = () => {
-    localStorage.removeItem('floracartUser');
-    setCurrentUser(null);
-    navigate('/');
-  };
+  const navigate = useNavigate();
 
   const handleScroll = (id) => {
     setIsMenuOpen(false);
@@ -22,6 +16,15 @@ function Navbar({ currentUser, setCurrentUser }) {
         section.scrollIntoView({ behavior: 'smooth' });
       }
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('floracartUser');
+    setCurrentUser(null);
+
+    setIsMenuOpen(false);
+
+    navigate('/', { replace: true });
   };
 
   return (
@@ -40,15 +43,11 @@ function Navbar({ currentUser, setCurrentUser }) {
           <Link to="/Flowers" className="hover:text-pink-600">Shop</Link>
           <Link to="/cart" className="hover:text-pink-600">Cart</Link>
           <button onClick={() => handleScroll('footer')} className="hover:text-pink-600">Contact</button>
-          {currentUser ? (
+          {currentUser && currentUser.username ? ( 
             <>
               <span className="text-pink-600">Hello, {currentUser.username}</span>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700"
-              >
-                Logout
-              </button>
+              {/* Logout button for desktop */}
+              <button onClick={handleLogout} className="hover:text-pink-600">Logout</button>
             </>
           ) : (
             <Link to="/login" className="hover:text-pink-600">Login</Link>
@@ -74,15 +73,11 @@ function Navbar({ currentUser, setCurrentUser }) {
           <Link to="/Flowers" onClick={() => setIsMenuOpen(false)} className="block hover:text-pink-600">Shop</Link>
           <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="block hover:text-pink-600">Cart</Link>
           <button onClick={() => handleScroll('footer')} className="block w-full hover:text-pink-600">Contact</button>
-          {currentUser ? (
+          {currentUser && currentUser.username ? ( // ✅ More robust check for currentUser and its username
             <>
               <span className="block text-pink-600">Hello, {currentUser.username}</span>
-              <button
-                onClick={handleLogout}
-                className="w-full mt-2 bg-pink-600 text-white py-1 rounded hover:bg-pink-700"
-              >
-                Logout
-              </button>
+              {/* Logout button for mobile */}
+              <button onClick={handleLogout} className="block w-full hover:text-pink-600">Logout</button>
             </>
           ) : (
             <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block hover:text-pink-600">Login</Link>
