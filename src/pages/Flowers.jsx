@@ -120,7 +120,7 @@ function Flowers({ currentUser, setCurrentUser }) {
     });
 
     try {
-      await axios.patch(`https://floracart-backend.onrender.com/${currentUser.id}`, { cart: updatedCart });
+      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
 
       setFlowers(prevFlowers => prevFlowers.map(f =>
         f.id === flower.id
