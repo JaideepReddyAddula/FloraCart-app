@@ -11,7 +11,7 @@ function Login({ setCurrentUser }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.get("http://localhost:3000/users");
+      const res = await axios.get("https://floracart-backend.onrender.com/users");
       const users = res.data;
 
       // Find matching user
