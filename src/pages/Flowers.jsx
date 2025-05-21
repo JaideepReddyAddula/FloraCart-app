@@ -5,115 +5,117 @@ function Flowers({ currentUser, setCurrentUser }) {
   const [flowers, setFlowers] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // ✅ Fetch flowers only once on mount
+  useEffect(() => {
+    fetchFlowers();
+  }, []);
+
   const fetchFlowers = async () => {
     try {
-      const response = await axios('https://floracart-backend.onrender.com/flowers');
-      setFlowers(response.data);
-      fetchUserCart(response.data);
+      const response = await axios('http://localhost:3000/flowers');
+      const allFlowers = response.data;
+      setFlowers(allFlowers);
+      if (currentUser) {
+        fetchUserCart(currentUser, allFlowers);
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const fetchUserCart = async (allFlowers) => {
+  const fetchUserCart = async (user, allFlowers) => {
     try {
-      if (!currentUser) return;
-      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
+      const userRes = await axios.get(`http://localhost:3000/users/${user.id}`);
       const userCart = userRes.data.cart || [];
 
       const updatedFlowers = allFlowers.map((flower) => {
         const cartItem = userCart.find(item => item.productId === flower.id);
-        if (cartItem) {
-          return {
-            ...flower,
-            isFlowerInCart: true,
-            quantity: cartItem.quantity,
-            cartId: cartItem.id,
-          };
-        } else {
-          return { ...flower, isFlowerInCart: false, quantity: 0 };
-        }
+        return cartItem
+          ? { ...flower, isFlowerInCart: true, quantity: cartItem.quantity, cartId: cartItem.id }
+          : { ...flower, isFlowerInCart: false, quantity: 0 };
       });
 
       setFlowers(updatedFlowers);
-      setCurrentUser(prev => ({ ...prev, cart: userCart }));
+      setCurrentUser({ ...user, cart: userCart });
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchFlowers();
+    // Only fetch cart if currentUser changes and flowers are already loaded
+    if (currentUser && flowers.length > 0) {
+      fetchUserCart(currentUser, flowers);
+    }
   }, [currentUser]);
 
   const generateCartItemId = () => Math.random().toString(36).substring(2, 8);
 
   const addToCart = async (flower) => {
+    if (!currentUser) return alert('Please login to add items to cart.');
     try {
-      if (!currentUser) return alert('Please login to add items to cart.');
-
-      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
-      const userCart = userRes.data.cart || [];
-
-      if (userCart.find(item => item.productId === flower.id)) {
-        return alert('Item already in cart');
-      }
-
-      const newCartItem = {
+      const updatedCart = [...(currentUser.cart || []), {
         id: generateCartItemId(),
         productId: flower.id,
         name: flower.name,
         quantity: 1,
         imgSrc: flower.imgSrc,
         price: flower.price,
-        discount: flower.discount,
-      };
+        discount: flower.discount
+      }];
 
-      const updatedCart = [...userCart, newCartItem];
+      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
 
-      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
+      const updatedFlowers = flowers.map(f =>
+        f.id === flower.id
+          ? { ...f, isFlowerInCart: true, quantity: 1, cartId: updatedCart.at(-1).id }
+          : f
+      );
 
-      alert('Added to cart');
-      fetchFlowers();
+      setFlowers(updatedFlowers);
+      setCurrentUser({ ...currentUser, cart: updatedCart });
+
     } catch (error) {
       console.error(error);
     }
   };
 
   const updateQuantity = async (flower, increment = true) => {
+    if (!currentUser) return alert('Please login.');
+
+    const updatedCart = (currentUser.cart || []).map(item => {
+      if (item.id === flower.cartId) {
+        let newQty = increment ? item.quantity + 1 : Math.max(1, item.quantity - 1);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    });
+
     try {
-      if (!currentUser) return alert('Please login.');
+      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
 
-      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
-      const userCart = userRes.data.cart || [];
+      const updatedFlowers = flowers.map(f =>
+        f.id === flower.id
+          ? { ...f, quantity: increment ? f.quantity + 1 : Math.max(1, f.quantity - 1) }
+          : f
+      );
 
-      const updatedCart = userCart.map(item => {
-        if (item.id === flower.cartId) {
-          let newQty = increment ? item.quantity + 1 : item.quantity - 1;
-          newQty = newQty < 1 ? 1 : newQty;
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      });
+      setFlowers(updatedFlowers);
+      setCurrentUser({ ...currentUser, cart: updatedCart });
 
-      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
-
-      alert('Updated item successfully');
-      fetchFlowers();
     } catch (error) {
       console.error(error);
     }
   };
 
-  const getDiscountedPrice = (flower) => {
-    return (flower.price - (flower.price * flower.discount) / 100).toFixed();
-  };
+  const getDiscountedPrice = (flower) =>
+    (flower.price - (flower.price * flower.discount) / 100).toFixed();
 
   const categories = ['All', 'Roses', 'Tulips', 'Lilies', 'Sunflowers', 'Orchids'];
 
   const filteredFlowers = selectedCategory === 'All'
     ? flowers
-    : flowers.filter(flower => flower.category === selectedCategory);
+    : flowers.filter(f => f.category === selectedCategory);
 
   return (
     <div>
