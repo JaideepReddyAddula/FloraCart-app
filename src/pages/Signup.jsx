@@ -13,11 +13,11 @@ function Signup({ setCurrentUser }) {
     e.preventDefault();
     try {
       // Check if user already exists
-      const res = await axios.get(`http://localhost:3000/users?email=${form.email}`);
+      const res = await axios.get(`https://floracart-backend.onrender.com/users?email=${form.email}`);
       if (res.data.length > 0) return alert('User already exists!');
 
       // Create new user with empty cart
-      const createRes = await axios.post('http://localhost:3000/users', {
+      const createRes = await axios.post('https://floracart-backend.onrender.com/users', {
         username: form.username,
         email: form.email,
         password: form.password,
