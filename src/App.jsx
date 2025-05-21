@@ -11,11 +11,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 
-
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Load user from localStorage on page refresh
   useEffect(() => {
     const savedUser = localStorage.getItem('floracartUser');
     if (savedUser) {
@@ -23,14 +21,10 @@ function App() {
     }
   }, []);
 
-  const logout = () => {
-    setCurrentUser(null);
-    // Optionally, navigate to login or home page after logout
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar currentUser={currentUser} setCurrentUser={setCurrentUser} logout={logout} />
+      
+      <Navbar currentUser={currentUser} setCurrentUser={setCurrentUser} />
 
       <main className="flex-grow">
         <Routes>
@@ -39,7 +33,7 @@ function App() {
           <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/Flowers" element={<Flowers currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
-          <Route path="/Cart" element={<Cart currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+          <Route path="/cart" element={<Cart currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           <Route path="/checkout" element={<Checkout currentUser={currentUser} />} />
           <Route path="/orderconfirmation" element={<OrderConfirmation />} />
         </Routes>
