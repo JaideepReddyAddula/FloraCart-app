@@ -7,7 +7,7 @@ function Flowers({ currentUser, setCurrentUser }) {
 
   const fetchFlowers = async () => {
     try {
-      const response = await axios('http://localhost:3000/flowers');
+      const response = await axios('https://floracart-backend.onrender.com/flowers');
       setFlowers(response.data);
       fetchUserCart(response.data);
     } catch (error) {
@@ -18,7 +18,7 @@ function Flowers({ currentUser, setCurrentUser }) {
   const fetchUserCart = async (allFlowers) => {
     try {
       if (!currentUser) return;
-      const userRes = await axios.get(`http://localhost:3000/users/${currentUser.id}`);
+      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
       const userCart = userRes.data.cart || [];
 
       const updatedFlowers = allFlowers.map((flower) => {
@@ -52,7 +52,7 @@ function Flowers({ currentUser, setCurrentUser }) {
     try {
       if (!currentUser) return alert('Please login to add items to cart.');
 
-      const userRes = await axios.get(`http://localhost:3000/users/${currentUser.id}`);
+      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
       const userCart = userRes.data.cart || [];
 
       if (userCart.find(item => item.productId === flower.id)) {
@@ -71,7 +71,7 @@ function Flowers({ currentUser, setCurrentUser }) {
 
       const updatedCart = [...userCart, newCartItem];
 
-      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
 
       alert('Added to cart');
       fetchFlowers();
@@ -84,7 +84,7 @@ function Flowers({ currentUser, setCurrentUser }) {
     try {
       if (!currentUser) return alert('Please login.');
 
-      const userRes = await axios.get(`http://localhost:3000/users/${currentUser.id}`);
+      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
       const userCart = userRes.data.cart || [];
 
       const updatedCart = userCart.map(item => {
@@ -96,7 +96,7 @@ function Flowers({ currentUser, setCurrentUser }) {
         return item;
       });
 
-      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
 
       alert('Updated item successfully');
       fetchFlowers();
