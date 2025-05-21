@@ -10,7 +10,7 @@ function ForgotPassword() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.get(`http://localhost:3000/users?email=${email}`);
+      const res = await axios.get(`https://floracart-backend.onrender.com/users?email=${email}`);
       if (res.data.length > 0) {
         setUserFound(res.data[0]); // User found
         setMessage('');
@@ -25,7 +25,7 @@ function ForgotPassword() {
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     try {
-      await axios.patch(`http://localhost:3000/users/${userFound.id}`, {
+      await axios.patch(`https://floracart-backend.onrender.com/users/${userFound.id}`, {
         password: newPassword,
       });
       setMessage('Password updated successfully. You can now log in.');
