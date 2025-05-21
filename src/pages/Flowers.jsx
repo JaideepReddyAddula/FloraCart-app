@@ -5,49 +5,79 @@ function Flowers({ currentUser, setCurrentUser }) {
   const [flowers, setFlowers] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // ✅ Fetch flowers only once on mount
   useEffect(() => {
-    fetchFlowers();
+    const loadAllFlowers = async () => {
+      try {
+        const response = await axios('https://floracart-backend.onrender.com/flowers');
+        setFlowers(response.data);
+      } catch (error) {
+        console.error("Error fetching all flowers:", error);
+      }
+    };
+    loadAllFlowers();
   }, []);
 
-  const fetchFlowers = async () => {
-    try {
-      const response = await axios('http://localhost:3000/flowers');
-      const allFlowers = response.data;
-      setFlowers(allFlowers);
-      if (currentUser) {
-        fetchUserCart(currentUser, allFlowers);
-      }
-    } catch (error) {
-      console.error(error);
+  useEffect(() => {
+    if (flowers.length === 0) {
+      return;
     }
-  };
 
-  const fetchUserCart = async (user, allFlowers) => {
-    try {
-      const userRes = await axios.get(`http://localhost:3000/users/${user.id}`);
-      const userCart = userRes.data.cart || [];
+    const updateFlowersWithCartStatus = async () => {
+      let newFlowersState = [];
 
-      const updatedFlowers = allFlowers.map((flower) => {
-        const cartItem = userCart.find(item => item.productId === flower.id);
-        return cartItem
-          ? { ...flower, isFlowerInCart: true, quantity: cartItem.quantity, cartId: cartItem.id }
-          : { ...flower, isFlowerInCart: false, quantity: 0 };
+      if (!currentUser) {
+        newFlowersState = flowers.map(flower => ({
+          ...flower,
+          isFlowerInCart: false,
+          quantity: 0,
+          cartId: undefined
+        }));
+      } else {
+        try {
+          const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
+          const userCart = userRes.data.cart || [];
+
+          newFlowersState = flowers.map(flower => {
+            const cartItem = userCart.find(item => item.productId === flower.id);
+            return cartItem
+              ? { ...flower, isFlowerInCart: true, quantity: cartItem.quantity, cartId: cartItem.id }
+              : { ...flower, isFlowerInCart: false, quantity: 0 };
+          });
+
+          setCurrentUser(prevUser => {
+              const isCartChanged = JSON.stringify(prevUser?.cart) !== JSON.stringify(userCart);
+              if (isCartChanged) {
+                  return { ...prevUser, cart: userCart };
+              }
+              return prevUser;
+          });
+
+        } catch (error) {
+          console.error("Error fetching user cart:", error);
+          if (error.response && error.response.status === 404) {
+            localStorage.removeItem('floracartUser');
+            setCurrentUser(null);
+          }
+          return;
+        }
+      }
+
+      const isFlowersStateDifferent = flowers.some((flower, index) => {
+        const newFlower = newFlowersState[index];
+        return (
+          flower.isFlowerInCart !== newFlower.isFlowerInCart ||
+          flower.quantity !== newFlower.quantity ||
+          flower.cartId !== newFlower.cartId
+        );
       });
 
-      setFlowers(updatedFlowers);
-      setCurrentUser({ ...user, cart: userCart });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+      if (isFlowersStateDifferent || flowers.length !== newFlowersState.length) {
+          setFlowers(newFlowersState);
+      }
+    };
 
-  useEffect(() => {
-    // Only fetch cart if currentUser changes and flowers are already loaded
-    if (currentUser && flowers.length > 0) {
-      fetchUserCart(currentUser, flowers);
-    }
-  }, [currentUser]);
+    updateFlowersWithCartStatus();
+  }, [currentUser, flowers]);
 
   const generateCartItemId = () => Math.random().toString(36).substring(2, 8);
 
@@ -64,19 +94,17 @@ function Flowers({ currentUser, setCurrentUser }) {
         discount: flower.discount
       }];
 
-      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+      await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
 
-      const updatedFlowers = flowers.map(f =>
+      setFlowers(prevFlowers => prevFlowers.map(f =>
         f.id === flower.id
           ? { ...f, isFlowerInCart: true, quantity: 1, cartId: updatedCart.at(-1).id }
           : f
-      );
-
-      setFlowers(updatedFlowers);
-      setCurrentUser({ ...currentUser, cart: updatedCart });
+      ));
+      setCurrentUser(prevUser => ({ ...prevUser, cart: updatedCart }));
 
     } catch (error) {
-      console.error(error);
+      console.error("Error adding to cart:", error);
     }
   };
 
@@ -92,19 +120,17 @@ function Flowers({ currentUser, setCurrentUser }) {
     });
 
     try {
-      await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+      await axios.patch(`https://floracart-backend.onrender.com/${currentUser.id}`, { cart: updatedCart });
 
-      const updatedFlowers = flowers.map(f =>
+      setFlowers(prevFlowers => prevFlowers.map(f =>
         f.id === flower.id
           ? { ...f, quantity: increment ? f.quantity + 1 : Math.max(1, f.quantity - 1) }
           : f
-      );
-
-      setFlowers(updatedFlowers);
-      setCurrentUser({ ...currentUser, cart: updatedCart });
+      ));
+      setCurrentUser(prevUser => ({ ...prevUser, cart: updatedCart }));
 
     } catch (error) {
-      console.error(error);
+      console.error("Error updating quantity:", error);
     }
   };
 
@@ -118,8 +144,8 @@ function Flowers({ currentUser, setCurrentUser }) {
     : flowers.filter(f => f.category === selectedCategory);
 
   return (
-    <div>
-      <h1 className="text-center text-4xl font-bold text-pink-700 mb-6 mt-20">Flowers</h1>
+    <div className="pt-20">
+      <h1 className="text-center text-4xl font-bold text-pink-700 mb-6">Flowers</h1>
 
       <div className="flex justify-center mb-8 gap-4 flex-wrap px-4">
         {categories.map((cat) => (
