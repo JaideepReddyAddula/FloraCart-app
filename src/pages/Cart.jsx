@@ -3,8 +3,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 
-// Same imports...
-
 function Cart({ currentUser, setCurrentUser }) {
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
