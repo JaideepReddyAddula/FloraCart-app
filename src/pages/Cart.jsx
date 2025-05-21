@@ -23,6 +23,14 @@ function Cart({ currentUser, setCurrentUser }) {
     fetchUserCart();
   }, [currentUser]);
 
+  const handleCheckout = () => {
+    if (cart.length > 0) {
+      navigate('/checkout');
+    } else {
+      alert('Your cart is empty.');
+    }
+  };
+
   const removeFromCart = async (cartItemId) => {
     if (!currentUser) return alert('Please login.');
     const updatedCart = cart.filter(item => item.id !== cartItemId);
@@ -40,7 +48,7 @@ function Cart({ currentUser, setCurrentUser }) {
       }
       return item;
     });
-    await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
+    await axios.patch(`https://floracart-backend.onrender.com/${currentUser.id}`, { cart: updatedCart });
     fetchUserCart();
   };
 
@@ -51,6 +59,7 @@ function Cart({ currentUser, setCurrentUser }) {
   const getTotalAmount = () => {
     return cart.reduce((acc, item) => acc + item.quantity * getDiscountedPrice(item), 0).toFixed(2);
   };
+
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-4 sm:p-6 mt-20">
@@ -115,7 +124,7 @@ function Cart({ currentUser, setCurrentUser }) {
           </div>
 
           <button
-            onClick={() => navigate('/checkout')}
+            onClick={handleCheckout}
             className="w-full bg-pink-600 text-white py-3 mt-4 rounded-md hover:bg-pink-700"
           >
             Checkout
