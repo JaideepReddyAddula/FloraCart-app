@@ -38,8 +38,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
-          <Route path="/Flowers" element={<Flowers currentUser={currentUser} />} />
-          <Route path="/Cart" element={<Cart currentUser={currentUser} />} />
+          <Route path="/Flowers" element={<Flowers currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+          <Route path="/Cart" element={<Cart currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           <Route path="/checkout" element={<Checkout currentUser={currentUser} />} />
           <Route path="/orderconfirmation" element={<OrderConfirmation />} />
         </Routes>
