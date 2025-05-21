@@ -12,7 +12,7 @@ function Cart({ currentUser, setCurrentUser }) {
   const fetchUserCart = async () => {
     try {
       if (!currentUser) return;
-      const userRes = await axios.get(`http://localhost:3000/users/${currentUser.id}`);
+      const userRes = await axios.get(`https://floracart-backend.onrender.com/users/${currentUser.id}`);
       const userCart = userRes.data.cart || [];
       setCart(userCart);
       setCurrentUser(prev => ({ ...prev, cart: userCart }));
@@ -28,7 +28,7 @@ function Cart({ currentUser, setCurrentUser }) {
   const removeFromCart = async (cartItemId) => {
     if (!currentUser) return alert('Please login.');
     const updatedCart = cart.filter(item => item.id !== cartItemId);
-    await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+    await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
     fetchUserCart();
   };
 
@@ -42,7 +42,7 @@ function Cart({ currentUser, setCurrentUser }) {
       }
       return item;
     });
-    await axios.patch(`http://localhost:3000/users/${currentUser.id}`, { cart: updatedCart });
+    await axios.patch(`https://floracart-backend.onrender.com/users/${currentUser.id}`, { cart: updatedCart });
     fetchUserCart();
   };
 
